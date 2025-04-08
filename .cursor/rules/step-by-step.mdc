@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+
+- Always suggest steps as an answer and wait for approval
+- Always answer exactly and specifically what you're asked. Nothing outside of that scope. 
