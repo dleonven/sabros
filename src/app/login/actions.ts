@@ -2,8 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
 import { createClient } from "@/utils/supabase/server";
+
+// Helper function to get the base URL
+function getBaseUrl() {
+	// Simply use the NEXT_PUBLIC_BASE_URL from .env
+	// This needs to be set correctly in production environments
+	return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+}
 
 export async function login(formData: FormData) {
 	console.log("Login function called");
@@ -77,13 +83,19 @@ export async function signup(formData: FormData) {
 		);
 	}
 
+	// Determine the correct redirect URL based on environment
+	const baseUrl = getBaseUrl();
+	const redirectTo = `${baseUrl}/auth/callback`;
+
+	console.log("Using redirect URL:", redirectTo);
+
 	// Proceed with signup
 	console.log("Attempting signup with email:", email);
 	const { error, data: signupData } = await supabase.auth.signUp({
 		email,
 		password,
 		options: {
-			emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+			emailRedirectTo: redirectTo,
 		},
 	});
 
