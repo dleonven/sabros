@@ -4,11 +4,30 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-// Helper function to get the base URL
+// Helper function to get the base URL with Vercel deployment support
 function getBaseUrl() {
-	// Simply use the NEXT_PUBLIC_BASE_URL from .env
-	// This needs to be set correctly in production environments
-	return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+	// Priority order for base URL:
+
+	// 1. Explicitly configured base URL (from env vars)
+	if (process.env.NEXT_PUBLIC_BASE_URL) {
+		return process.env.NEXT_PUBLIC_BASE_URL.trim();
+	}
+
+	// 2. Vercel preview deployment URL
+	if (process.env.VERCEL_URL) {
+		return `https://${process.env.VERCEL_URL}`;
+	}
+
+	// 3. Vercel production deployment URL
+	if (
+		process.env.VERCEL_ENV === "production" &&
+		process.env.NEXT_PUBLIC_VERCEL_URL
+	) {
+		return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+	}
+
+	// 4. Fallback to localhost for development
+	return "http://localhost:3000";
 }
 
 export async function login(formData: FormData) {
@@ -85,7 +104,8 @@ export async function signup(formData: FormData) {
 
 	// Determine the correct redirect URL based on environment
 	const baseUrl = getBaseUrl();
-	const redirectTo = `${baseUrl}/auth/callback`;
+	// Use /auth/confirm instead of /auth/callback to match Supabase's behavior
+	const redirectTo = `${baseUrl}/auth/confirm`;
 
 	console.log("Using redirect URL:", redirectTo);
 
