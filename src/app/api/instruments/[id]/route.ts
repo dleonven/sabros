@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function PUT(
-	request: Request,
+	req: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
 	try {
 		const id = BigInt(params.id);
-		const { name } = await request.json();
+		const { name } = await req.json();
 
 		if (!name || typeof name !== "string") {
 			return NextResponse.json(
@@ -21,13 +21,10 @@ export async function PUT(
 			data: { name },
 		});
 
-		// Convert BigInt ID to string
-		const serializedInstrument = {
+		return NextResponse.json({
 			...instrument,
 			id: instrument.id.toString(),
-		};
-
-		return NextResponse.json(serializedInstrument);
+		});
 	} catch (error) {
 		console.error("Error updating instrument:", error);
 		return NextResponse.json(
@@ -38,7 +35,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-	request: Request,
+	req: NextRequest,
 	{ params }: { params: { id: string } }
 ) {
 	try {
