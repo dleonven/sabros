@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest) {
 	try {
-		const id = BigInt(params.id);
+		const url = new URL(req.url);
+		const idParam = url.pathname.split("/").pop();
+		if (!idParam) {
+			return NextResponse.json(
+				{ error: "Missing ID in URL" },
+				{ status: 400 }
+			);
+		}
+		const id = BigInt(idParam);
 		const { name } = await req.json();
 
 		if (!name || typeof name !== "string") {
@@ -34,12 +39,17 @@ export async function PUT(
 	}
 }
 
-export async function DELETE(
-	req: NextRequest,
-	{ params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
 	try {
-		const id = BigInt(params.id);
+		const url = new URL(req.url);
+		const idParam = url.pathname.split("/").pop();
+		if (!idParam) {
+			return NextResponse.json(
+				{ error: "Missing ID in URL" },
+				{ status: 400 }
+			);
+		}
+		const id = BigInt(idParam);
 
 		await prisma.instruments.delete({
 			where: { id },
