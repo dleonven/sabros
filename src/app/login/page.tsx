@@ -4,11 +4,12 @@ import { login, signup } from "./actions";
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, ArrowLeft, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 // Different modes for the auth UI
 type AuthMode = "selection" | "signin" | "signup";
 
-export default function LoginPage() {
+function LoginPageContent() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [authMode, setAuthMode] = useState<AuthMode>("selection");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -177,5 +178,25 @@ export default function LoginPage() {
 				)}
 			</div>
 		</div>
+	);
+}
+
+export default function LoginPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="min-h-screen flex items-center justify-center bg-gray-50">
+					<div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+						<div className="text-center">
+							<h2 className="mt-6 text-3xl font-bold text-gray-900">
+								Loading...
+							</h2>
+						</div>
+					</div>
+				</div>
+			}
+		>
+			<LoginPageContent />
+		</Suspense>
 	);
 }
