@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
-		const id = BigInt(params.id);
+		// Await params before using properties
+		const { id: paramId } = await context.params;
+		const id = BigInt(paramId);
 		const { name } = await request.json();
 
 		if (!name || typeof name !== "string") {
@@ -39,10 +41,12 @@ export async function PUT(
 
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } }
+	context: { params: { id: string } }
 ) {
 	try {
-		const id = BigInt(params.id);
+		// Await params before using properties
+		const { id: paramId } = await context.params;
+		const id = BigInt(paramId);
 
 		await prisma.instruments.delete({
 			where: { id },
