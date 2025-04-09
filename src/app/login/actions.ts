@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
+// Helper function to normalize URLs to avoid double slashes
+function normalizeUrl(url: string): string {
+	// Remove trailing slash if exists
+	return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
 // Helper function to get the base URL with Vercel deployment support
 function getBaseUrl() {
 	// Debug logging
@@ -20,7 +26,7 @@ function getBaseUrl() {
 
 	// 1. Explicitly configured base URL (from env vars)
 	if (process.env.NEXT_PUBLIC_BASE_URL) {
-		const baseUrl = process.env.NEXT_PUBLIC_BASE_URL.trim();
+		const baseUrl = normalizeUrl(process.env.NEXT_PUBLIC_BASE_URL.trim());
 		console.log("Using NEXT_PUBLIC_BASE_URL:", baseUrl);
 		return baseUrl;
 	}
