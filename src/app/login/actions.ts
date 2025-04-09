@@ -127,8 +127,8 @@ export async function signup(formData: FormData) {
 
 	// Determine the correct redirect URL based on environment
 	const baseUrl = getBaseUrl();
-	// Use the new API route for email confirmation
-	const redirectTo = `${baseUrl}/api/auth/confirm`;
+	// Use direct path to the confirmation page which now handles verification itself
+	const redirectTo = `${baseUrl}/auth/confirm`;
 
 	console.log("Using redirect URL for signup:", redirectTo);
 

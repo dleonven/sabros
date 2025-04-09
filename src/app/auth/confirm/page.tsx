@@ -3,6 +3,8 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { EmailOtpType } from "@supabase/supabase-js";
 
 function ConfirmPageContent() {
 	const router = useRouter();
@@ -12,27 +14,81 @@ function ConfirmPageContent() {
 	>("waiting");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	// Get status from query params (set by our API route)
+	// Get status from query params
 	const statusParam = searchParams.get("status");
 	const messageParam = searchParams.get("message");
+
+	// Check for Supabase token parameters
+	const token_hash = searchParams.get("token_hash");
+	const type = searchParams.get("type") as EmailOtpType | null;
+
+	// Log all params for debugging
+	console.log(
+		"Confirm page loaded with params:",
+		Object.fromEntries([...searchParams.entries()])
+	);
+	console.log("Status param:", statusParam);
+	console.log("Token hash:", token_hash);
+	console.log("Type:", type);
 
 	// Message to display when no status is provided (just showing the confirmation message)
 	const message =
 		messageParam || "Please check your email for a confirmation link.";
 
 	useEffect(() => {
-		// Set status based on URL parameters
-		if (statusParam === "success") {
+		// First check if we have token parameters (direct email link)
+		if (token_hash && type) {
+			console.log("Found token parameters, verifying directly");
+			setStatus("loading");
+
+			const verifyToken = async () => {
+				try {
+					const supabase = createClient();
+					console.log("Verifying token with Supabase");
+					const { error } = await supabase.auth.verifyOtp({
+						type,
+						token_hash,
+					});
+
+					if (error) {
+						console.error("Verification error:", error);
+						setStatus("error");
+						setErrorMessage(error.message);
+					} else {
+						console.log("Email verification successful");
+						setStatus("success");
+						// Redirect to private area after successful verification
+						setTimeout(() => {
+							console.log(
+								"Redirecting to /private after success"
+							);
+							router.push("/private");
+						}, 2000);
+					}
+				} catch (err) {
+					console.error("Exception during verification:", err);
+					setStatus("error");
+					setErrorMessage("An unexpected error occurred");
+				}
+			};
+
+			verifyToken();
+		}
+		// Otherwise check the status parameter (set by another route)
+		else if (statusParam === "success") {
+			console.log("Setting status to success");
 			setStatus("success");
 			// Redirect to private area after successful verification
 			setTimeout(() => {
+				console.log("Redirecting to /private after success");
 				router.push("/private");
 			}, 2000);
 		} else if (statusParam === "error") {
+			console.log("Setting status to error with message:", messageParam);
 			setStatus("error");
 			setErrorMessage(messageParam || "Verification failed");
 		}
-	}, [statusParam, messageParam, router]);
+	}, [statusParam, messageParam, token_hash, type, router]);
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50">
