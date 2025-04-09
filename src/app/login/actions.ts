@@ -127,8 +127,8 @@ export async function signup(formData: FormData) {
 
 	// Determine the correct redirect URL based on environment
 	const baseUrl = getBaseUrl();
-	// Use /auth/confirm instead of /auth/callback to match Supabase's behavior
-	const redirectTo = `${baseUrl}/auth/confirm`;
+	// Use the new API route for email confirmation
+	const redirectTo = `${baseUrl}/api/auth/confirm`;
 
 	console.log("Using redirect URL for signup:", redirectTo);
 

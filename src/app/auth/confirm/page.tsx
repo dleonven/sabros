@@ -3,8 +3,6 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { EmailOtpType } from "@supabase/supabase-js";
 
 function ConfirmPageContent() {
 	const router = useRouter();
@@ -14,48 +12,27 @@ function ConfirmPageContent() {
 	>("waiting");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	// Message to display when no token is provided (just showing the confirmation message)
-	const message =
-		searchParams.get("message") ||
-		"Please check your email for a confirmation link.";
+	// Get status from query params (set by our API route)
+	const statusParam = searchParams.get("status");
+	const messageParam = searchParams.get("message");
 
-	// Check for token and type parameters which indicate this is a verification link
-	const token_hash = searchParams.get("token_hash");
-	const type = searchParams.get("type") as EmailOtpType | null;
+	// Message to display when no status is provided (just showing the confirmation message)
+	const message =
+		messageParam || "Please check your email for a confirmation link.";
 
 	useEffect(() => {
-		// Only run verification if we have token parameters
-		if (token_hash && type) {
-			setStatus("loading");
-			const verifyToken = async () => {
-				try {
-					const supabase = createClient();
-					const { error } = await supabase.auth.verifyOtp({
-						type,
-						token_hash,
-					});
-
-					if (error) {
-						console.error("Verification error:", error);
-						setStatus("error");
-						setErrorMessage(error.message);
-					} else {
-						setStatus("success");
-						// Redirect to private area after successful verification
-						setTimeout(() => {
-							router.push("/private");
-						}, 2000);
-					}
-				} catch (err) {
-					console.error("Error during verification:", err);
-					setStatus("error");
-					setErrorMessage("An unexpected error occurred");
-				}
-			};
-
-			verifyToken();
+		// Set status based on URL parameters
+		if (statusParam === "success") {
+			setStatus("success");
+			// Redirect to private area after successful verification
+			setTimeout(() => {
+				router.push("/private");
+			}, 2000);
+		} else if (statusParam === "error") {
+			setStatus("error");
+			setErrorMessage(messageParam || "Verification failed");
 		}
-	}, [token_hash, type, router]);
+	}, [statusParam, messageParam, router]);
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gray-50">
