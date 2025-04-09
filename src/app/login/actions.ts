@@ -6,16 +6,30 @@ import { createClient } from "@/utils/supabase/server";
 
 // Helper function to get the base URL with Vercel deployment support
 function getBaseUrl() {
+	// Debug logging
+	console.log("Environment variables for base URL determination:");
+	console.log("- NEXT_PUBLIC_BASE_URL:", process.env.NEXT_PUBLIC_BASE_URL);
+	console.log("- VERCEL_URL:", process.env.VERCEL_URL);
+	console.log("- VERCEL_ENV:", process.env.VERCEL_ENV);
+	console.log(
+		"- NEXT_PUBLIC_VERCEL_URL:",
+		process.env.NEXT_PUBLIC_VERCEL_URL
+	);
+
 	// Priority order for base URL:
 
 	// 1. Explicitly configured base URL (from env vars)
 	if (process.env.NEXT_PUBLIC_BASE_URL) {
-		return process.env.NEXT_PUBLIC_BASE_URL.trim();
+		const baseUrl = process.env.NEXT_PUBLIC_BASE_URL.trim();
+		console.log("Using NEXT_PUBLIC_BASE_URL:", baseUrl);
+		return baseUrl;
 	}
 
 	// 2. Vercel preview deployment URL
 	if (process.env.VERCEL_URL) {
-		return `https://${process.env.VERCEL_URL}`;
+		const baseUrl = `https://${process.env.VERCEL_URL}`;
+		console.log("Using VERCEL_URL:", baseUrl);
+		return baseUrl;
 	}
 
 	// 3. Vercel production deployment URL
@@ -23,10 +37,13 @@ function getBaseUrl() {
 		process.env.VERCEL_ENV === "production" &&
 		process.env.NEXT_PUBLIC_VERCEL_URL
 	) {
-		return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+		const baseUrl = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+		console.log("Using NEXT_PUBLIC_VERCEL_URL:", baseUrl);
+		return baseUrl;
 	}
 
 	// 4. Fallback to localhost for development
+	console.log("Falling back to localhost");
 	return "http://localhost:3000";
 }
 
@@ -107,7 +124,13 @@ export async function signup(formData: FormData) {
 	// Use /auth/confirm instead of /auth/callback to match Supabase's behavior
 	const redirectTo = `${baseUrl}/auth/confirm`;
 
-	console.log("Using redirect URL:", redirectTo);
+	console.log("Using redirect URL for signup:", redirectTo);
+
+	// Log the full signup options to verify what's being sent to Supabase
+	console.log("Signup options:", {
+		email,
+		emailRedirectTo: redirectTo,
+	});
 
 	// Proceed with signup
 	console.log("Attempting signup with email:", email);
