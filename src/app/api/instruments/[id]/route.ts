@@ -6,9 +6,7 @@ export async function PUT(
 	context: { params: { id: string } }
 ) {
 	try {
-		// Await params before using properties
-		const { id: paramId } = await context.params;
-		const id = BigInt(paramId);
+		const id = BigInt(context.params.id);
 		const { name } = await request.json();
 
 		if (!name || typeof name !== "string") {
@@ -44,9 +42,7 @@ export async function DELETE(
 	context: { params: { id: string } }
 ) {
 	try {
-		// Await params before using properties
-		const { id: paramId } = await context.params;
-		const id = BigInt(paramId);
+		const id = BigInt(context.params.id);
 
 		await prisma.instruments.delete({
 			where: { id },
