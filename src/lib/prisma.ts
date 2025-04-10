@@ -9,20 +9,40 @@ const globalForPrisma = globalThis as unknown as {
 // Add options to handle prepared statement conflicts
 const prismaClientSingleton = () => {
 	console.log("[Prisma] Creating new PrismaClient instance");
-	return new PrismaClient({
+	const prisma = new PrismaClient({
 		log: [
-			{ level: "query", emit: "event" },
 			{ level: "error", emit: "stdout" },
 			{ level: "info", emit: "stdout" },
 			{ level: "warn", emit: "stdout" },
 		],
-		// Adding connection management options to help with the "prepared statement already exists" error
 		datasources: {
 			db: {
 				url: process.env.DATABASE_URL,
 			},
 		},
 	});
+
+	// Add query logging middleware
+	prisma.$extends({
+		query: {
+			$allOperations({ operation, model, args, query }) {
+				const before = Date.now();
+				return query(args).then((result) => {
+					const after = Date.now();
+					console.log("[Prisma Query]", {
+						model,
+						operation,
+						args,
+						duration: after - before,
+						timestamp: new Date(),
+					});
+					return result;
+				});
+			},
+		},
+	});
+
+	return prisma;
 };
 
 // Initialize client with debug logging
@@ -41,24 +61,6 @@ if (process.env.NODE_ENV !== "production") {
 	console.log("[Prisma] Initializing production instance");
 	prismaInstance = prismaClientSingleton();
 }
-
-// Add query logging
-type QueryEvent = {
-	timestamp: Date;
-	query: string;
-	params: string;
-	duration: number;
-	target: string;
-};
-
-prismaInstance.$on("query", (e: QueryEvent) => {
-	console.log("[Prisma Query]", {
-		query: e.query,
-		params: e.params,
-		duration: e.duration,
-		timestamp: e.timestamp,
-	});
-});
 
 export const prisma = prismaInstance;
 
