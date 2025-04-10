@@ -22,7 +22,7 @@ const prismaClientSingleton = () => {
 			{ level: "warn", emit: "stdout" },
 		],
 		datasourceUrl: isPooledConnection
-			? process.env.DATABASE_URL + "?pgbouncer=true&connection_limit=1"
+			? `${process.env.DATABASE_URL}?pgbouncer=true&connection_limit=1&prepare=false`
 			: process.env.DATABASE_URL,
 	});
 
