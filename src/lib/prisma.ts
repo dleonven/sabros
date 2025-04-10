@@ -15,11 +15,7 @@ const prismaClientSingleton = () => {
 			{ level: "info", emit: "stdout" },
 			{ level: "warn", emit: "stdout" },
 		],
-		datasources: {
-			db: {
-				url: process.env.DATABASE_URL,
-			},
-		},
+		datasourceUrl: process.env.DATABASE_URL + "?pgbouncer=true",
 	});
 
 	// Add query logging middleware
