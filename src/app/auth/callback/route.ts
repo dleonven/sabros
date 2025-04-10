@@ -21,5 +21,8 @@ export async function GET(request: NextRequest) {
 	}
 
 	// If we get here, something went wrong
-	redirect("/error");
+	redirect(
+		"/login?error=" +
+			encodeURIComponent("Email verification failed. Please try again.")
+	);
 }

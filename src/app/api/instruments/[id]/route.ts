@@ -1,15 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(
-	request: Request,
-	context: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest) {
 	try {
-		// Await params before using properties
-		const { id: paramId } = await context.params;
-		const id = BigInt(paramId);
-		const { name } = await request.json();
+		const url = new URL(req.url);
+		const idParam = url.pathname.split("/").pop();
+		if (!idParam) {
+			return NextResponse.json(
+				{ error: "Missing ID in URL" },
+				{ status: 400 }
+			);
+		}
+		const id = BigInt(idParam);
+		const { name } = await req.json();
 
 		if (!name || typeof name !== "string") {
 			return NextResponse.json(
@@ -23,13 +26,10 @@ export async function PUT(
 			data: { name },
 		});
 
-		// Convert BigInt ID to string
-		const serializedInstrument = {
+		return NextResponse.json({
 			...instrument,
 			id: instrument.id.toString(),
-		};
-
-		return NextResponse.json(serializedInstrument);
+		});
 	} catch (error) {
 		console.error("Error updating instrument:", error);
 		return NextResponse.json(
@@ -39,20 +39,23 @@ export async function PUT(
 	}
 }
 
-export async function DELETE(
-	request: Request,
-	context: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
 	try {
-		// Await params before using properties
-		const { id: paramId } = await context.params;
-		const id = BigInt(paramId);
+		const url = new URL(req.url);
+		const idParam = url.pathname.split("/").pop();
+		if (!idParam) {
+			return NextResponse.json(
+				{ error: "Missing ID in URL" },
+				{ status: 400 }
+			);
+		}
+		const id = BigInt(idParam);
 
 		await prisma.instruments.delete({
 			where: { id },
 		});
 
-		return new NextResponse(null, { status: 204 });
+		return new Response(null, { status: 204 });
 	} catch (error) {
 		console.error("Error deleting instrument:", error);
 		return NextResponse.json(
