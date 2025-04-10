@@ -9,13 +9,21 @@ const globalForPrisma = globalThis as unknown as {
 // Add options to handle prepared statement conflicts
 const prismaClientSingleton = () => {
 	console.log("[Prisma] Creating new PrismaClient instance");
+
+	// Check if we're using the connection pooler (production) or direct connection (local)
+	const isPooledConnection = process.env.DATABASE_URL?.includes(
+		"pooler.supabase.com"
+	);
+
 	const prisma = new PrismaClient({
 		log: [
 			{ level: "error", emit: "stdout" },
 			{ level: "info", emit: "stdout" },
 			{ level: "warn", emit: "stdout" },
 		],
-		datasourceUrl: process.env.DATABASE_URL, // Using session mode (5432)
+		datasourceUrl: isPooledConnection
+			? process.env.DATABASE_URL + "?pgbouncer=true&connection_limit=1"
+			: process.env.DATABASE_URL,
 	});
 
 	// Add query logging middleware
