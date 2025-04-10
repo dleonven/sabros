@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import InstrumentList from "./components/InstrumentList";
 import { Tabs } from "./components/Tabs";
 import { Header } from "./components/Header";
+import type { instruments } from "@prisma/client";
 
 export default async function PrivatePage() {
 	const supabase = await createClient();
@@ -13,12 +14,19 @@ export default async function PrivatePage() {
 		redirect("/login");
 	}
 
-	// Fetch all instruments
-	const instruments = await prisma.instruments.findMany({
-		orderBy: {
-			name: "asc",
-		},
-	});
+	// Fetch all instruments with error handling
+	let instruments: instruments[] = [];
+	try {
+		instruments = await prisma.instruments.findMany({
+			orderBy: {
+				name: "asc",
+			},
+		});
+		console.log(`Successfully fetched ${instruments.length} instruments`);
+	} catch (err) {
+		console.error("Error fetching instruments:", err);
+		// Continue with empty instruments rather than crashing
+	}
 
 	return (
 		<div className="min-h-screen bg-gray-50">
