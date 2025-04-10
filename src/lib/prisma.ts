@@ -6,26 +6,36 @@ const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined;
 };
 
-// Add options to handle prepared statement conflicts
 const prismaClientSingleton = () => {
 	return new PrismaClient({
-		log:
-			process.env.NODE_ENV === "development"
-				? ["error", "warn"]
-				: ["error"],
-		// Adding connection management options to help with the "prepared statement already exists" error
-		datasources: {
-			db: {
-				url: process.env.DATABASE_URL,
-			},
-		},
+		datasourceUrl: `${process.env.DATABASE_URL}&pgbouncer=true&connection_limit=1&pool_timeout=20&statement_cache_size=0&prepared_statement_cache_size=0`,
 	});
 };
 
-// Use existing client instance if available to prevent multiple instances
 export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-// Attach to global in development for hot-reload resilience
 if (process.env.NODE_ENV !== "production") {
+	console.log("[Prisma] Initializing development instance");
 	globalForPrisma.prisma = prisma;
+} else {
+	console.log("[Prisma] Initializing production instance");
 }
+
+// Clean up the connection when the app is shutting down
+process.on("beforeExit", async () => {
+	console.log("[Prisma] Disconnecting on beforeExit");
+	await prisma.$disconnect();
+});
+
+// Handle unexpected shutdowns
+process.on("SIGINT", async () => {
+	console.log("[Prisma] Disconnecting on SIGINT");
+	await prisma.$disconnect();
+	process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+	console.log("[Prisma] Disconnecting on SIGTERM");
+	await prisma.$disconnect();
+	process.exit(0);
+});
