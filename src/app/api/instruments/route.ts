@@ -15,6 +15,30 @@ export async function GET() {
 		return NextResponse.json(serializedInstruments);
 	} catch (error) {
 		console.error("Error fetching instruments:", error);
+		// Attempt to reconnect if it's a connection error
+		if (
+			error instanceof Error &&
+			error.message.includes("prepared statement")
+		) {
+			try {
+				await prisma.$disconnect();
+				await prisma.$connect();
+				const instruments = await prisma.instruments.findMany({
+					orderBy: { id: "asc" },
+				});
+				const serializedInstruments = instruments.map((instrument) => ({
+					...instrument,
+					id: instrument.id.toString(),
+				}));
+				return NextResponse.json(serializedInstruments);
+			} catch (retryError) {
+				console.error("Error after reconnection attempt:", retryError);
+				return NextResponse.json(
+					{ error: "Failed to fetch instruments after retry" },
+					{ status: 500 }
+				);
+			}
+		}
 		return NextResponse.json(
 			{ error: "Failed to fetch instruments" },
 			{ status: 500 }
@@ -39,6 +63,32 @@ export async function POST(request: Request) {
 		return NextResponse.json(serializedInstrument);
 	} catch (error) {
 		console.error("Error creating instrument:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("prepared statement")
+		) {
+			try {
+				const json = await request.json(); // Re-parse the request body
+				await prisma.$disconnect();
+				await prisma.$connect();
+				const instrument = await prisma.instruments.create({
+					data: {
+						name: json.name,
+					},
+				});
+				const serializedInstrument = {
+					...instrument,
+					id: instrument.id.toString(),
+				};
+				return NextResponse.json(serializedInstrument);
+			} catch (retryError) {
+				console.error("Error after reconnection attempt:", retryError);
+				return NextResponse.json(
+					{ error: "Failed to create instrument after retry" },
+					{ status: 500 }
+				);
+			}
+		}
 		return NextResponse.json(
 			{ error: "Failed to create instrument" },
 			{ status: 500 }
@@ -64,6 +114,33 @@ export async function PUT(request: Request) {
 		return NextResponse.json(serializedInstrument);
 	} catch (error) {
 		console.error("Error updating instrument:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("prepared statement")
+		) {
+			try {
+				const json = await request.json(); // Re-parse the request body
+				await prisma.$disconnect();
+				await prisma.$connect();
+				const instrument = await prisma.instruments.update({
+					where: { id: BigInt(json.id) },
+					data: {
+						name: json.name,
+					},
+				});
+				const serializedInstrument = {
+					...instrument,
+					id: instrument.id.toString(),
+				};
+				return NextResponse.json(serializedInstrument);
+			} catch (retryError) {
+				console.error("Error after reconnection attempt:", retryError);
+				return NextResponse.json(
+					{ error: "Failed to update instrument after retry" },
+					{ status: 500 }
+				);
+			}
+		}
 		return NextResponse.json(
 			{ error: "Failed to update instrument" },
 			{ status: 500 }
@@ -81,6 +158,26 @@ export async function DELETE(request: Request) {
 		return NextResponse.json({ message: "Instrument deleted" });
 	} catch (error) {
 		console.error("Error deleting instrument:", error);
+		if (
+			error instanceof Error &&
+			error.message.includes("prepared statement")
+		) {
+			try {
+				const json = await request.json(); // Re-parse the request body
+				await prisma.$disconnect();
+				await prisma.$connect();
+				await prisma.instruments.delete({
+					where: { id: BigInt(json.id) },
+				});
+				return NextResponse.json({ message: "Instrument deleted" });
+			} catch (retryError) {
+				console.error("Error after reconnection attempt:", retryError);
+				return NextResponse.json(
+					{ error: "Failed to delete instrument after retry" },
+					{ status: 500 }
+				);
+			}
+		}
 		return NextResponse.json(
 			{ error: "Failed to delete instrument" },
 			{ status: 500 }
