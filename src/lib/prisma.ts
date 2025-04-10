@@ -7,10 +7,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const prismaClientSingleton = () => {
-	console.log("[Prisma] Creating new PrismaClient instance");
-
 	return new PrismaClient({
-		datasourceUrl: `${process.env.DATABASE_URL}?pgbouncer=true&connection_limit=1&pool_timeout=20&statement_cache_size=0&prepared_statement_cache_size=0`,
+		datasourceUrl: `${process.env.DATABASE_URL}&pgbouncer=true&connection_limit=1&pool_timeout=20&statement_cache_size=0&prepared_statement_cache_size=0`,
 	});
 };
 
