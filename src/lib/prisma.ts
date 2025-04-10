@@ -16,9 +16,7 @@ const prismaClientSingleton = () => {
 		// Adding connection management options to help with the "prepared statement already exists" error
 		datasources: {
 			db: {
-				url: process.env.DATABASE_URL
-					? `${process.env.DATABASE_URL}?pgbouncer=true&pool_timeout=20&connection_limit=5&statement_cache_size=0`
-					: undefined,
+				url: process.env.DATABASE_URL,
 			},
 		},
 	});
