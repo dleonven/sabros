@@ -22,6 +22,7 @@ export async function GET() {
 		) {
 			try {
 				await prisma.$disconnect();
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // Add a small delay
 				await prisma.$connect();
 				const instruments = await prisma.instruments.findMany({
 					orderBy: { id: "asc" },
@@ -48,11 +49,21 @@ export async function GET() {
 
 // POST new instrument
 export async function POST(request: Request) {
+	let requestData;
 	try {
-		const json = await request.json();
+		requestData = await request.json();
+	} catch (parseError) {
+		console.error("Error parsing request data:", parseError);
+		return NextResponse.json(
+			{ error: "Invalid request data" },
+			{ status: 400 }
+		);
+	}
+
+	try {
 		const instrument = await prisma.instruments.create({
 			data: {
-				name: json.name,
+				name: requestData.name,
 			},
 		});
 		// Convert BigInt ID to string
@@ -68,12 +79,12 @@ export async function POST(request: Request) {
 			error.message.includes("prepared statement")
 		) {
 			try {
-				const json = await request.json(); // Re-parse the request body
 				await prisma.$disconnect();
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // Add a small delay
 				await prisma.$connect();
 				const instrument = await prisma.instruments.create({
 					data: {
-						name: json.name,
+						name: requestData.name,
 					},
 				});
 				const serializedInstrument = {
@@ -98,12 +109,22 @@ export async function POST(request: Request) {
 
 // PUT update instrument
 export async function PUT(request: Request) {
+	let requestData;
 	try {
-		const json = await request.json();
+		requestData = await request.json();
+	} catch (parseError) {
+		console.error("Error parsing request data:", parseError);
+		return NextResponse.json(
+			{ error: "Invalid request data" },
+			{ status: 400 }
+		);
+	}
+
+	try {
 		const instrument = await prisma.instruments.update({
-			where: { id: BigInt(json.id) },
+			where: { id: BigInt(requestData.id) },
 			data: {
-				name: json.name,
+				name: requestData.name,
 			},
 		});
 		// Convert BigInt ID to string
@@ -119,13 +140,13 @@ export async function PUT(request: Request) {
 			error.message.includes("prepared statement")
 		) {
 			try {
-				const json = await request.json(); // Re-parse the request body
 				await prisma.$disconnect();
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // Add a small delay
 				await prisma.$connect();
 				const instrument = await prisma.instruments.update({
-					where: { id: BigInt(json.id) },
+					where: { id: BigInt(requestData.id) },
 					data: {
-						name: json.name,
+						name: requestData.name,
 					},
 				});
 				const serializedInstrument = {
@@ -150,10 +171,20 @@ export async function PUT(request: Request) {
 
 // DELETE instrument
 export async function DELETE(request: Request) {
+	let requestData;
 	try {
-		const json = await request.json();
+		requestData = await request.json();
+	} catch (parseError) {
+		console.error("Error parsing request data:", parseError);
+		return NextResponse.json(
+			{ error: "Invalid request data" },
+			{ status: 400 }
+		);
+	}
+
+	try {
 		await prisma.instruments.delete({
-			where: { id: BigInt(json.id) },
+			where: { id: BigInt(requestData.id) },
 		});
 		return NextResponse.json({ message: "Instrument deleted" });
 	} catch (error) {
@@ -163,11 +194,11 @@ export async function DELETE(request: Request) {
 			error.message.includes("prepared statement")
 		) {
 			try {
-				const json = await request.json(); // Re-parse the request body
 				await prisma.$disconnect();
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // Add a small delay
 				await prisma.$connect();
 				await prisma.instruments.delete({
-					where: { id: BigInt(json.id) },
+					where: { id: BigInt(requestData.id) },
 				});
 				return NextResponse.json({ message: "Instrument deleted" });
 			} catch (retryError) {
